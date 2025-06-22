@@ -7,20 +7,19 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import threading
 import warnings
-import os
 import time
 from tenacity import retry, stop_after_attempt, wait_fixed
 warnings.filterwarnings("ignore")
 
 API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json"
-DATA_FILE = "wingo_big_small_data.json"
 WINDOW_SIZE = 3
 MAX_DATA_SIZE = 1000
 CONFIDENCE_THRESHOLD = 0.6
 
 app = FastAPI()
 
-# Global trained model and lock
+# Global data store and trained model
+data_store = []
 trained_model = None
 model_lock = threading.Lock()
 
@@ -64,21 +63,11 @@ def fetch_latest():
         return None, None, None
 
 def load_data():
-    try:
-        if os.path.exists(DATA_FILE):
-            with open(DATA_FILE, "r") as f:
-                return json.load(f)
-        return []
-    except Exception as e:
-        print(f"❌ Error loading data: {e}")
-        return []
+    return data_store
 
 def save_data(data):
-    try:
-        with open(DATA_FILE, "w") as f:
-            json.dump(data[-MAX_DATA_SIZE:], f)
-    except Exception as e:
-        print(f"❌ Error saving data: {e}")
+    global data_store
+    data_store = data[-MAX_DATA_SIZE:]
 
 def extract_features(window_nums):
     big_small_count = sum(1 for n in window_nums if n >= 5)
