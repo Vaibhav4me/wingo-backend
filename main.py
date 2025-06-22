@@ -10,6 +10,9 @@ import warnings
 import time
 import random
 from tenacity import retry, stop_after_attempt, wait_fixed
+import os
+import uvicorn
+
 warnings.filterwarnings("ignore")
 
 API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json"
@@ -182,3 +185,7 @@ async def predict():
         "confidence": conf * 100,
         "accuracy": accuracy
     }
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))  # Use Render's PORT or default to 8000 locally
+    uvicorn.run(app, host="0.0.0.0", port=port)
